@@ -33,7 +33,8 @@ class Application(Frame):
             j = 0
             for k in range(0,9):
                 button = Button(self, text=" ", bg='blue',
-                 fg='cyan', height=1, width=1, command=lambda block=block, k=k: self.button_function(block,k, button))
+                 fg='cyan', height=2, width=4)
+                button.config(command=lambda block=block, k=k, b=button: self.button_function(block,k, b))
                 button.grid(row=x+i, column=y+j, sticky= S+N+E+W)
                 j = j + 1
                 if j >=3:
@@ -43,6 +44,13 @@ class Application(Frame):
             self.buttons.append(new_button_arr)
             block = block + 1
         #add overarching grids
+        for x in [3,7]:
+            for i in range(11):
+                l = Label(self, bg='black', height=1, width=2)
+                l.grid(row=i, column=x, sticky=S+N+E+W)
+                l =  Label(self, bg='black', height=1, width=1)
+                l.grid( row=x, column=i, sticky=S+N+E+W)
+        
 
 
 
