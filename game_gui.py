@@ -3,8 +3,9 @@ import numpy as np
 from tkinter import *
 from random import random
 import math
+from bots import *
 HUMAN = 'HUMAN'
-BOT = 'BOT'
+
 class Human_Player:
     TYPE = HUMAN
     def __init__(self):
@@ -12,14 +13,7 @@ class Human_Player:
     def make_move(self, game):
         return self.cur_action
 
-class Random_Bot:
-    TYPE = BOT
-    def make_move(self, game):
-        poss_moves = game.get_possible_moves()
-        print(poss_moves)
-        picked_move = poss_moves[math.floor(random() * len(poss_moves))]
-        print("ROBOT MOVE -- {}".format(picked_move))
-        return picked_move
+
 
 
 class Application(Frame):
@@ -115,8 +109,13 @@ class Application(Frame):
 
 root = Tk()
 hb = Human_Player()
-rb = Random_Bot()
-app = Application(root, hb, rb)
+print('Bots to choose from: {}'.format(list(bot_dict.keys())))
+bot_key = input('Pick a bot from this list: ').strip().lower()
+while bot_key not in bot_dict:
+    print('Bot not found.  Choose again from {}'.format(list(bot_dict.keys())))
+    bot_key = input().strip().lower()
+bot = bot_dict[bot_key]()
+app = Application(root, hb, bot)
 app.mainloop()
 
 # command line for players
