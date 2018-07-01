@@ -36,6 +36,8 @@ class Game:
                     possible_move_pairs.append([self.inner_board_section, j])
         else:
             for i in range(9):
+                if self.ownership[i] != -1:
+                    continue
                 for j in range(9):
                     if self.board[i][j] == -1:
                         possible_move_pairs.append([i,j])
@@ -45,28 +47,37 @@ class Game:
         if self.game_done == -1:
             if not self.check_move(inner_board_section, space_location):
                 print('Invalid Move.  Pick another place.')
-                return False
+                return None
             self.board[inner_board_section, space_location] = self.player
             self.inner_board_section = space_location
             inner_block_winner = self.block_winner_condition(self.board[inner_board_section])
             if inner_block_winner != -1:
-                self.inner_board_section = -1
                 self.ownership[inner_board_section] = inner_block_winner
                 outer_block = self.block_winner_condition(self.ownership)
                 if outer_block != -1:
                     self.game_done = outer_block
             self.player = 1 - self.player
-            return True
-        return False
+            if self.ownership[space_location] != -1:
+                self.inner_board_section = -1
+            else:
+                self.inner_board_section = space_location
+            return [inner_board_section, space_location]
+        return None
 
     def check_move(self, inner_board_section, space_location):
         if min(inner_board_section, space_location) < 0 or max(inner_board_section, space_location) > 8:
+            return False
+        if self.inner_board_section == -1 and self.ownership[inner_board_section] != -1:
             return False
         if self.inner_board_section != -1:
             return self.inner_board_section == inner_board_section and self.board[inner_board_section][space_location] == -1
         return self.board[inner_board_section][space_location] == -1
 
     def is_game_finished(self):
+        # -1 for going
+        # 0 for first player
+        # 1 for second player
+        # 2 for tie
         return self.game_done
 
     def block_winner_condition(self, array_of_squares):

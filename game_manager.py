@@ -11,12 +11,22 @@ class Game_Manager:
 
     def run_game(self):
         if self.first_player_turn:
-            success = self.player_one.make_move(self.game)
+            move = self.player_one.make_move(self.game)
         else:
-            success = self.player_two.make_move(self.game)
+            move = self.player_two.make_move(self.game)
 
-        if success is not None:
+        if move is not None:
+            block, space = move
+            action_output = self.game.take_action(block, space)
+            if action_output is None:
+                return None
             self.first_player_turn = not self.first_player_turn
         else:
             print('No action taken.')
-        return success
+        return move
+
+    def game_outcome(self):
+        return self.game.is_game_finished()
+
+    def current_board_section(self):
+        return self.game.inner_board_section
