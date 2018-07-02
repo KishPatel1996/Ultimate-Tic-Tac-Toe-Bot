@@ -8,12 +8,14 @@ class Game_Manager:
         self.player_two = player_two
         self.game = Game()
         self.first_player_turn = True
+        self.player_one.set_player_id(0)
+        self.player_two.set_player_id(1)
 
     def run_game(self):
         if self.first_player_turn:
-            move = self.player_one.make_move(self.game)
+            move = self.player_one.make_move(self.game.copy())
         else:
-            move = self.player_two.make_move(self.game)
+            move = self.player_two.make_move(self.game.copy())
 
         if move is not None:
             block, space = move

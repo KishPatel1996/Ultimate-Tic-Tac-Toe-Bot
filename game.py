@@ -23,10 +23,18 @@ class Game:
         self.player = 0
         self.game_done = -1
         self.inner_board_section = -1
-        self.board = []
         self.ownership = [-1] * 9
-        self.board = -1 * np.ones((9,9))
+        self.board = -1 * np.ones((9,9), dtype=np.uint8)
 
+    def copy(self):
+        game_copy = Game()
+        game_copy.player= self.player
+        game_copy.game_done = self.game_done
+        game_copy.inner_board_section = self.inner_board_section
+        game_copy.board = np.copy(self.board)
+        game_copy.ownership = self.ownership[:]
+        return game_copy
+        
 
     def get_possible_moves(self):
         possible_move_pairs = []
@@ -56,6 +64,10 @@ class Game:
                 outer_block = self.block_winner_condition(self.ownership)
                 if outer_block != -1:
                     self.game_done = outer_block
+                    return [inner_board_section, space_location]
+                elif not self.possible_to_win_check():
+                    self.game_done = 2
+                    return [inner_board_section, space_location]
             self.player = 1 - self.player
             if self.ownership[space_location] != -1:
                 self.inner_board_section = -1
@@ -97,6 +109,25 @@ class Game:
         return 2
 
     def possible_to_win_check(self):
+        for winning_combo in self.winning_combinations:
+            player_one_count = 0
+            player_two_count = 0
+            for grid in winning_combo:
+                if self.ownership[grid] == 0:
+                    player_one_count = player_one_count + 1
+                elif self.ownership[grid] == 1:
+                    player_two_count = player_two_count + 1
+            
+            #only one spot taken.  Still a chance for a winner
+            if player_one_count + player_two_count <= 1:
+                return True
+
+            # one player owns two and the other is free.  Chance
+            if (player_one_count == 2 and player_two_count == 0) or \
+               (player_two_count == 2 and player_one_count == 0):
+               return True
+        return False
+
         pass
 
     def print_board(self):

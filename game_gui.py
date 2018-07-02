@@ -13,6 +13,9 @@ class Human_Player:
     def make_move(self, game):
         return self.cur_action
 
+    def set_player_id(self, player_id):
+        self.player_id = player_id
+
 
 
 
@@ -26,10 +29,20 @@ class Application(Frame):
         self.second_player = second_player
         self.gm = Game_Manager(first_player, second_player)
         self.board_spot_taken = np.zeros((9,9), dtype=np.uint8)
+        if self.first_player.TYPE == BOT:
+            block,space = self.gm.run_game()
+            self.buttons[block][space].config(bg='#DF5B56', state=DISABLED )
+            self.board_spot_taken[block,space]=1
+            self.gray_out_unselectable_buttons()
+            self.update()
+
 
     def button_function(self, block, space, button):
         print('{} {}'.format(block, space))
-        self.first_player.cur_action = [block, space]
+        if self.first_player.TYPE == HUMAN:
+            self.first_player.cur_action = [block, space]
+        else:
+            self.second_player.cur_action = [block, space]
         move_output = self.gm.run_game()
         # check for valid move
         if move_output is None:
@@ -69,7 +82,7 @@ class Application(Frame):
             if game_done_check == 2:
                 print('Game was Tied')
             else:
-                print('{} won'.format('Human' if game_done_check == 0 else 'Bot'))
+                print('{} won'.format(self.first_player.TYPE if game_done_check == 0 else self.second_player.TYPE))
             for button_array in self.buttons:
                 for b in button_array:
                     b.config(state=DISABLED)
