@@ -12,7 +12,7 @@ Add a bot class to `bots.py` that implements `make_move()`,`set_player_id`, and 
 
 To select a bot to versus, run `python game_gui.py` and the console will ask for the key of the bot class to instantiate.
 
-![Screenshot]('screenshot_1.PNG')
+![Screenshot](screenshot_1.PNG)
 
 ### Current Bots Implemented
 
