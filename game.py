@@ -35,6 +35,12 @@ class Game:
         game_copy.ownership = self.ownership[:]
         return game_copy
         
+    def __eq__(self, other):
+        running_check = True
+        running_check = running_check and self.player == other.player
+        running_check = running_check and self.inner_board_section == other.inner_board_section
+        running_check = running_check and np.array_equal(self.board, other.board)
+        return running_check
 
     def get_possible_moves(self):
         possible_move_pairs = []

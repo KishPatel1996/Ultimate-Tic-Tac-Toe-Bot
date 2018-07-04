@@ -1,6 +1,7 @@
 BOT = 'BOT'
 import math
 from random import random
+import time
 class Random_Bot:
     TYPE = BOT
     def __init__(self):
@@ -178,13 +179,162 @@ class Alpha_Beta_Heuristic_Bot:
         return current_player_score - enemy_score
 
 
-                
+class MonteCarloTS:
+    TYPE = BOT
+    
+    def __init__(self):
+        self.player_id = None
+    def set_player_id(self, player_id):
+        self.player_id = player_id     
+    def make_move(self, game):
+        
 
+        return self.run_mcts(game, 10)
+
+    
+
+    def run_mcts(self, game, time_limit):
+        # dictionary storing game and [number of visits, total reward]
+        score_dict = {}
+        fringe_states = set()
+        root_node = self.Node(game, None)
+        fringe_states.add(root_node)
+        start_time = time.time()
+        end_time = time.time()
+
+        sims_run = 0
+        while len(fringe_states) > 0 and end_time - start_time <= time_limit:
+            curr_node = None
+            if len(fringe_states) == 1:
+                curr_node = fringe_states.pop()
+            else:
+                best_score = -1e6
+                best_fringe = None
+                for n in fringe_states:
+                    score = n.uct(c=1)
+                    if score > best_score:
+                        best_score = score
+                        best_fringe = n
+                curr_node = best_fringe
+                fringe_states.remove(curr_node)
+                
+            for poss_moves in curr_node.get_possible_moves():
+                new_state = curr_node.state.copy()
+                new_state.take_action(poss_moves[0], poss_moves[1])
+                child = curr_node.has_child_with_same_state(new_state)
+                if child is None:
+                    child = self.Node(new_state, curr_node)
+                    curr_node.add_child(child)
+
+                fringe_states.add(child)
+                self.simulate(child)
+                sims_run += 1
+                end_time = time.time()
+        print('Simulations run before time limit: {}'.format(sims_run))
+        
+        best_move = None
+        best_score = -1e6
+        for pos in root_node.get_possible_moves():
+            new_state = root_node.state.copy()
+            new_state.take_action(pos[0], pos[1])
+            child = root_node.has_child_with_same_state(new_state)
+            if child is not None:
+                score = child.uct(0)
+                if score > best_score:
+                    best_score = score
+                    best_move = pos
+        print('Best score: {}'.format(best_score))
+        return best_move
+        
+
+
+    def backpropagate_data(self, leaf_node, reward):
+        curr_node = leaf_node
+        while curr_node is not None:
+            curr_node.total_visits = curr_node.total_visits + 1
+            curr_node.total_reward = curr_node.total_reward + reward
+            curr_node = curr_node.parent
+            reward = reward * 0.99
+        
+    def simulate(self, node):
+        # returns leaf
+        curr_node = node
+        while curr_node.state.is_game_finished() == -1:
+            poss_moves = curr_node.get_possible_moves()
+            random_move = poss_moves[math.floor(random() * len(poss_moves))]
+            new_state = curr_node.state.copy()
+            new_state.take_action(random_move[0], random_move[1])
+            child = curr_node.has_child_with_same_state(new_state)
+            if child is None:
+                child = self.Node(new_state, curr_node)
+                curr_node.add_child(child)
+            curr_node = child
+        reward = self.calculate_reward(curr_node)
+        self.backpropagate_data(curr_node, reward)
+
+    def calculate_reward(self, leaf_node):
+        # returns reward amount depending on leaf node
+        game_outcome = leaf_node.state.is_game_finished()
+        if game_outcome == self.player_id:
+            return 1
+        elif game_outcome == 1 - self.player_id:
+            return -1
+        return 0
+
+    class Node:
+        def __init__(self,game, parent):
+            self.parent=parent
+            self.children = []
+            self.total_visits = 0
+            self.total_reward = 0
+            self.state = game
+
+        def best_child(self):
+            pass
+
+        def uct(self, c):
+            # print('First part {}'.format(self.total_reward / self.total_visits))
+            # print('Second Part {}'.format(math.sqrt(self.parent.total_visits/ self.total_visits)))
+            return self.total_reward / self.total_visits + c * math.sqrt(self.parent.total_visits/ self.total_visits)
+
+        def add_child(self, node):
+            self.children.append(node)
+        def has_child_with_same_state(self, state):
+            for c in self.children:
+                if c.state == state:
+                    return c
+            return None
+        def get_possible_moves(self):
+            return self.state.get_possible_moves()
+
+
+class MixBot:
+    TYPE = BOT
+    
+    def __init__(self):
+        self.player_id = None
+    def set_player_id(self, player_id):
+        self.player_id = player_id     
+    def make_move(self, game):
+        grids_sections_owned = 0
+        for x in  game.ownership:
+            if x != -1:
+                grids_sections_owned = grids_sections_owned + 1
+        if grids_sections_owned > 3:
+            bot = MonteCarloTS()
+            bot.set_player_id(self.player_id)
+            return bot.make_move(game)
+        else:
+            bot = Alpha_Beta_Heuristic_Bot()
+            bot.set_player_id(self.player_id)
+            return bot.make_move(game)
 
         
 
 
 bot_dict = {
     'random': Random_Bot,
-    'ab': Alpha_Beta_Heuristic_Bot
+    'ab': Alpha_Beta_Heuristic_Bot,
+    'mcts': MonteCarloTS,
+    'mix': MixBot
 }
