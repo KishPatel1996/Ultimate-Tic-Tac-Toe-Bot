@@ -23,3 +23,9 @@ Given the high branching factor of the game, especially when any available blank
 
 The minimax search depth increases as sections of the overarching grid are taken.  This is to reduce time spent on the first few turns, and have more time spent considering next moves when the game nears its end.
 
+##### Monte Carlo Tree Search Bot
+Implemented a preliminary version of a bot that utilizes MCTS to pick move.
+
+###### Improvement Points
+* Current simulation randomly picks a move for both the player and the opponent.  Because of this, the bot will often select a move that almost guarantees the opponent will win since the both is not considering for an 'adversarial' opponent.  Improvements can be made function used to determine score, or implement a minimizing opponent.
+* State space is pretty large.  Need to find a more optimal tradeoff between exploitation and exploration.
