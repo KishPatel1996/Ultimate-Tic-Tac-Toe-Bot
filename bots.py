@@ -2,6 +2,9 @@ BOT = 'BOT'
 import math
 from random import random
 import time
+from simulation import sigmoid
+import pickle
+import numpy as np
 class Random_Bot:
     TYPE = BOT
     def __init__(self):
@@ -12,11 +15,41 @@ class Random_Bot:
 
     def make_move(self, game):
         poss_moves = game.get_possible_moves()
-        print(poss_moves)
         picked_move = poss_moves[math.floor(random() * len(poss_moves))]
-        print("ROBOT MOVE -- {}".format(picked_move))
         return picked_move
 
+class NN_Bot:
+    TYPE = BOT
+    def __init__(self, path='C:/personal_projects/Tix-Tax-Bots/neural_net_weights.pkl'):
+        self.player_id = None
+        if path is not None:
+            with open(path, 'rb') as f_in:
+                self.model = pickle.load(f_in)
+
+    def set_player_id(self, player_id):
+        self.player_id = player_id
+
+    def make_move(self, game):
+        moves = []
+        values = []
+        for move in game.get_possible_moves():
+            moves.append(move)
+            sim_value = game.simulate_action(move[0], move[1]).reshape((-1,1))
+            sim_value[sim_value == -1] = 2
+            sim_value[sim_value == 1 - self.player_id] = -1
+            sim_value[sim_value == self.player_id] = 1
+            sim_value[sim_value == 2] = 0
+            value = self.feed_forward(sim_value)
+            values.append(value)
+        return moves[np.argmax(values)]
+
+    def feed_forward(self, initial):
+        h1 = sigmoid(np.dot(self.model['W1'], initial))
+        h2 = sigmoid(np.dot(self.model['W2'], h1))
+        value = sigmoid(np.dot(self.model['W3'], h2))[0,0]
+        return value
+
+    
 class Alpha_Beta_Heuristic_Bot:
     TYPE = BOT
 
@@ -336,5 +369,6 @@ bot_dict = {
     'random': Random_Bot,
     'ab': Alpha_Beta_Heuristic_Bot,
     'mcts': MonteCarloTS,
-    'mix': MixBot
+    'mix': MixBot,
+    'nn': NN_Bot
 }

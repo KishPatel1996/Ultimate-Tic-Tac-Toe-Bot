@@ -128,7 +128,7 @@ while bot_key not in bot_dict:
     print('Bot not found.  Choose again from {}'.format(list(bot_dict.keys())))
     bot_key = input().strip().lower()
 bot = bot_dict[bot_key]()
-app = Application(root, hb, bot)
+app = Application(root, bot, hb)
 app.mainloop()
 
 # command line for players

@@ -82,6 +82,13 @@ class Game:
             return [inner_board_section, space_location]
         return None
 
+    def simulate_action(self, inner_board_section, space_location):
+        if self.game_done == -1:
+            if self.check_move(inner_board_section, space_location):
+                board_copy = np.copy(self.board)
+                board_copy[inner_board_section, space_location] = self.player
+                return board_copy
+
     def check_move(self, inner_board_section, space_location):
         if min(inner_board_section, space_location) < 0 or max(inner_board_section, space_location) > 8:
             return False
