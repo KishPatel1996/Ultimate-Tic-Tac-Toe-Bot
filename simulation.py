@@ -18,7 +18,7 @@ class Simulation:
         else:
             with open(pickle_file, 'rb') as f_in:
                 self.current_player = pickle.load(f_in)
-        self.batch_count = 50
+        self.batch_count = 25
 
         self.reward_decay = 0.99
         self.learning_rate = 1e-3

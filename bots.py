@@ -58,16 +58,10 @@ class Alpha_Beta_Heuristic_Bot:
 
     def set_player_id(self, player_id):
         self.player_id = player_id
-        print('BOT ID: {}'.format(self.player_id))
 
     def make_move(self, game):
-        depth = 4
-        for x in  game.ownership:
-            if x != -1:
-                depth = depth + 1
-        depth = min(depth, 9)
+        depth = 3
         score, move = self.alpha_beta_tree_traversal(game, -1e6, 1e6, True, 0, depth)
-        print('Best score: {}'.format(score))
         return move
 
     def alpha_beta_tree_traversal(self, game_state, alpha, beta,
@@ -230,7 +224,7 @@ class MonteCarloTS:
         # dictionary storing game and [number of visits, total reward]
         score_dict = {}
         fringe_states = set()
-        root_node = self.Node(game, None)
+        root_node = self.Node(game, None, True)
         fringe_states.add(root_node)
         start_time = time.time()
         end_time = time.time()
@@ -244,7 +238,7 @@ class MonteCarloTS:
                 best_score = -1e6
                 best_fringe = None
                 for n in fringe_states:
-                    score = n.uct(c=1)
+                    score = n.uct(c=0.75)
                     if score > best_score:
                         best_score = score
                         best_fringe = n
@@ -256,24 +250,26 @@ class MonteCarloTS:
                 new_state.take_action(poss_moves[0], poss_moves[1])
                 child = curr_node.has_child_with_same_state(new_state)
                 if child is None:
-                    child = self.Node(new_state, curr_node)
+                    child = self.Node(new_state, curr_node, not curr_node.is_current_player)
                     curr_node.add_child(child)
 
                 fringe_states.add(child)
                 self.simulate(child)
                 sims_run += 1
-                end_time = time.time()
+            end_time = time.time()
         print('Simulations run before time limit: {}'.format(sims_run))
         
         best_move = None
-        best_score = -1e6
+        best_score = 1e6
         for pos in root_node.get_possible_moves():
             new_state = root_node.state.copy()
             new_state.take_action(pos[0], pos[1])
             child = root_node.has_child_with_same_state(new_state)
             if child is not None:
                 score = child.uct(0)
-                if score > best_score:
+                print("Move: {} -- Score: {}".format(pos, score))
+                if score < best_score and child.total_visits > sims_run / 10:
+                    
                     best_score = score
                     best_move = pos
         print('Best score: {}'.format(best_score))
@@ -285,7 +281,12 @@ class MonteCarloTS:
         curr_node = leaf_node
         while curr_node is not None:
             curr_node.total_visits = curr_node.total_visits + 1
-            curr_node.total_reward = curr_node.total_reward + reward
+            current_reward = 0
+            if curr_node.is_current_player and reward > 0:
+                current_reward = reward
+            elif not curr_node.is_current_player and reward < 0:
+                current_reward = -reward
+            curr_node.total_reward = curr_node.total_reward + current_reward
             curr_node = curr_node.parent
             reward = reward * 0.99
         
@@ -299,7 +300,7 @@ class MonteCarloTS:
             new_state.take_action(random_move[0], random_move[1])
             child = curr_node.has_child_with_same_state(new_state)
             if child is None:
-                child = self.Node(new_state, curr_node)
+                child = self.Node(new_state, curr_node, not curr_node.is_current_player)
                 curr_node.add_child(child)
             curr_node = child
         reward = self.calculate_reward(curr_node)
@@ -315,12 +316,13 @@ class MonteCarloTS:
         return 0
 
     class Node:
-        def __init__(self,game, parent):
+        def __init__(self,game, parent, is_current_player):
             self.parent=parent
             self.children = []
             self.total_visits = 0
             self.total_reward = 0
             self.state = game
+            self.is_current_player = is_current_player
 
         def best_child(self):
             pass
